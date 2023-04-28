@@ -29,8 +29,8 @@ jobs:
               const updatedCommentBody = commentBody.replace(urlRegex, `[${projectName}]($&)`);
 
               await github.rest.issues.updateComment({
-                context.repo.owner,
-                context.repo.repo,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
                 comment_id: context.payload.comment.id,
                 body: updatedCommentBody,
               });

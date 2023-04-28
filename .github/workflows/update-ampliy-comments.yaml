@@ -1,0 +1,38 @@
+name: Update Amplify comments
+
+permissions:
+  pull-requests: write
+
+on:
+  issue_comment:
+    types: [created]
+
+jobs:
+  update-amplify-comment:
+    if: |
+      contains(github.event.comment.body, 'This pull request is automatically being deployed by Amplify Hosting')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Add name to links
+        uses: actions/github-script@v6
+        with:
+          script: |
+            const domainsToProjects = {
+              'abcdef': 'Real Project',
+            };
+            const commentBody = context.payload.comment.body;
+            const urlRegex = /https:\/\/pr-(\d+)\.([A-Za-z0-9_-]+)\.amplifyapp\.com/;
+            const matches = commentBody.match(urlRegex);
+            if (matches) {
+              const projectDomain = matches[2];
+              const projectName = domainsToProjects[projectDomain];
+              const updatedCommentBody = commentBody.replace(urlRegex, `[${projectName}]($&)`);
+
+              await github.rest.issues.updateComment({
+                context.repo.owner,
+                context.repo.repo,
+                comment_id: context.payload.comment.id,
+                body: updatedCommentBody,
+              });
+            }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
